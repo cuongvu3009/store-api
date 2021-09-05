@@ -1,30 +1,38 @@
+require("dotenv").config();
+require("express-async-errors");
+
 const express = require("express");
 const app = express();
-require("dotenv").config();
 
-const products = require("./routes/products");
 const connectDB = require("./db/connect");
-const notFound = require("./middleware/not-found");
-const errorHandlerMiddleware = require("./middleware/error-handler");
+const productsRouter = require("./routes/products");
 
-//  route
-app.use("/api/v1/products", products);
+const notFoundMiddleware = require("./middleware/not-found");
+const errorMiddleware = require("./middleware/error-handler");
 
-app.use("/", (req, res) => {
-  res.send("Hello world");
+// middleware
+app.use(express.json());
+
+// routes
+
+app.get("/", (req, res) => {
+  res.send('<h1>Store API</h1><a href="/api/v1/products">products route</a>');
 });
 
-//  middleware
-app.use(express.json());
-app.use(notFound);
-app.use(errorHandlerMiddleware);
+app.use("/api/v1/products", productsRouter);
 
-const PORT = process.env.PORT || 4000;
+// products route
+
+app.use(notFoundMiddleware);
+app.use(errorMiddleware);
+
+const port = process.env.PORT || 3000;
 
 const start = async () => {
   try {
+    // connectDB
     await connectDB(process.env.MONGO_URI);
-    app.listen(PORT, console.log(`Server listening on port ${PORT}`));
+    app.listen(port, console.log(`Server is listening port ${port}...`));
   } catch (error) {
     console.log(error);
   }
